@@ -1,0 +1,326 @@
+<div class="container-fluid p-4">
+  <!-- Loading -->
+  @if (loading) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+  }
+
+  <!-- Erro -->
+  @if (error && !loading) {
+    <div class="alert alert-danger">{{ error }}</div>
+  }
+
+  <!-- Conteúdo da Solicitação -->
+  @if (request && !loading) {
+    <!-- Header com ações -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="mb-0">Detalhe da Solicitação</h3>
+      <div class="d-flex gap-2">
+        @if (canActOnRequest) {
+          <!-- Botão Aprovar -->
+          <button class="btn btn-success" (click)="onApprove()">
+            <i class="bi bi-check-circle"></i> Aprovar
+          </button>
+
+          <!-- Botão Rejeitar -->
+          <button class="btn btn-danger" (click)="onReject()">
+            <i class="bi bi-x-circle"></i> Rejeitar
+          </button>
+        }
+
+        <!-- Botão para rejeitar solicitação APROVADA (Manager) -->
+        <button class="btn btn-outline-secondary" (click)="closeDialog()">
+          <i class="bi bi-x-lg"></i> Fechar
+        </button>
+      </div>
+    </div>
+
+    <!-- Card Principal com todas as informações -->
+    <div class="card shadow mb-4">
+      <div
+        class="card-header bg-white d-flex justify-content-between align-items-center"
+      >
+        <h5 class="mb-0">Informações da Solicitação</h5>
+        <span
+          class="badge fs-6 py-2 px-3"
+          [ngClass]="getStatusClass(request.status)"
+        >
+          {{ getStatusLabel(request.status) }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <!-- Título em destaque -->
+        <h4 class="mb-4">{{ request.title }}</h4>
+
+        <div class="row">
+          <!-- Coluna 1: Informações básicas -->
+          <div class="col-md-6">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold text-muted" style="width: 120px">ID:</td>
+                <td>
+                  <code>{{ request.id }}</code>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Categoria:</td>
+                <td>
+                  <span class="badge bg-secondary">{{ request.category }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Prioridade:</td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="getPriorityClass(request.priority)"
+                  >
+                    {{ getPriorityLabel(request.priority) }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Status:</td>
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="getStatusClass(request.status)"
+                  >
+                    {{ getStatusLabel(request.status) }}
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Coluna 2: Datas e responsáveis -->
+          <div class="col-md-6">
+            <table class="table table-borderless">
+              <tr>
+                <td class="fw-bold text-muted" style="width: 140px">
+                  Criado por:
+                </td>
+                <td>{{ request.create_by || "N/A" }}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Data criação:</td>
+                <td>{{ formatDate(request.created_at) }}</td>
+              </tr>
+              @if (request.updated_at) {
+                <tr>
+                  <td class="fw-bold text-muted">Atualizado em:</td>
+                  <td>{{ formatDate(request.updated_at) }}</td>
+                </tr>
+              }
+              @if (request.approvedBy) {
+                <tr>
+                  <td class="fw-bold text-muted">Aprovado por:</td>
+                  <td>{{ request.approvedBy }}</td>
+                </tr>
+              }
+              @if (request.approvedAt) {
+                <tr>
+                  <td class="fw-bold text-muted">Aprovado em:</td>
+                  <td>{{ formatDate(request.approvedAt) }}</td>
+                </tr>
+              }
+            </table>
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        <div class="mt-4">
+          <h6 class="fw-bold text-muted mb-2">Descrição:</h6>
+          <div class="p-3 bg-light rounded">
+            {{ request.description }}
+          </div>
+        </div>
+
+        <!-- Motivo da rejeição (se houver) -->
+        @if (request.rejectionReason) {
+          <div class="mt-4">
+            <h6 class="fw-bold text-danger mb-2">Motivo da rejeição:</h6>
+            <div class="p-3 bg-danger bg-opacity-10 rounded text-danger">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              {{ request.rejectionReason }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Histórico / Timeline -->
+    <div class="card shadow">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">
+          <i class="bi bi-clock-history me-2"></i>
+          Histórico de Alterações
+        </h5>
+      </div>
+
+      <div class="card-body">
+        @if (history.length === 0) {
+          <p class="text-muted text-center py-4">
+            <i class="bi bi-info-circle me-2"></i>
+            Nenhum histórico encontrado
+          </p>
+        }
+
+        <div class="timeline">
+          @for (item of history; track item.id) {
+            <div class="timeline-item mb-4">
+              <div class="row g-0">
+                <div class="col-md-3">
+                  <div class="timeline-date text-muted small">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    {{ formatDate(item.createdAt) }}
+                  </div>
+                </div>
+                <div class="col-md-9">
+                  <div class="timeline-content">
+                    <div class="card bg-light border-0">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                          <span class="badge bg-secondary"
+                            >De: {{ item.oldValue || "?" }}</span
+                          >
+                          <i class="bi bi-arrow-right"></i>
+                          <span class="badge bg-primary"
+                            >Para: {{ item.newValue || "?" }}</span
+                          >
+                        </div>
+
+                        <p class="mb-1">
+                          <i class="bi bi-person-circle me-1"></i>
+                          <strong>{{
+                            item.changedBy || item.userId || "Sistema"
+                          }}</strong>
+                        </p>
+
+                        @if (item.comment || item.description) {
+                          <p class="mb-0 mt-2 p-2 bg-white rounded">
+                            <i class="bi bi-chat-left-text me-1 text-muted"></i>
+                            "{{ item.comment || item.description }}"
+                          </p>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Diálogo de Aprovação -->
+  @if (showApproveDialog) {
+    <div class="modal-overlay">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-check-circle me-2"></i>
+              Confirmar Aprovação
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              (click)="showApproveDialog = false"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Tem certeza que deseja aprovar esta solicitação?</p>
+            <p class="mb-0 text-muted small">
+              <i class="bi bi-info-circle me-1"></i>
+              Esta ação não poderá ser desfeita.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              (click)="showApproveDialog = false"
+            >
+              Cancelar
+            </button>
+            <button class="btn btn-success" (click)="onConfirmApprove()">
+              <i class="bi bi-check-lg me-1"></i>
+              Confirmar Aprovação
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Diálogo de Rejeição -->
+  <!-- Diálogo de Rejeição -->
+  @if (showRejectDialog) {
+    <div class="modal-overlay">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-x-circle me-2"></i>
+              Rejeitar Solicitação
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              (click)="showRejectDialog = false"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form [formGroup]="rejectForm">
+              <div class="mb-3">
+                <label for="reason" class="form-label">
+                  Motivo da rejeição <span class="text-danger">*</span>
+                </label>
+                <textarea
+                  class="form-control"
+                  id="reason"
+                  rows="4"
+                  formControlName="reason"
+                  [class.is-invalid]="reason?.invalid && reason?.touched"
+                  placeholder="Explique o motivo da rejeição..."
+                ></textarea>
+                @if (reason?.invalid && reason?.touched) {
+                  <div class="invalid-feedback">
+                    @if (reason?.errors?.["required"]) {
+                      <span>Motivo é obrigatório</span>
+                    }
+                    @if (reason?.errors?.["minlength"]) {
+                      <span>Motivo deve ter no mínimo 5 caracteres</span>
+                    }
+                  </div>
+                }
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              class="btn btn-secondary"
+              (click)="showRejectDialog = false"
+            >
+              Cancelar
+            </button>
+            <button
+              class="btn btn-danger"
+              [disabled]="rejectForm.invalid"
+              (click)="onConfirmReject()"
+            >
+              <i class="bi bi-x-lg me-1"></i>
+              Confirmar Rejeição
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
