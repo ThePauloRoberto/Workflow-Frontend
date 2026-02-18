@@ -1,0 +1,112 @@
+<div class="modal-header bg-primary text-white">
+  <h4 class="modal-title">
+    <i class="bi bi-plus-circle me-2"></i>
+    Nova Solicitação
+  </h4>
+  <button type="button" class="btn-close btn-close-white" (click)="onCancel()"></button>
+</div>
+
+<div class="modal-body">
+  <form [formGroup]="requestForm" (ngSubmit)="onSubmit()">
+    <!-- Título -->
+    <div class="mb-3">
+      <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
+      <input
+        type="text"
+        class="form-control"
+        id="title"
+        formControlName="title"
+        [class.is-invalid]="title?.invalid && title?.touched"
+        placeholder="Digite o título da solicitação">
+      @if (title?.invalid && title?.touched) {
+        <div class="invalid-feedback">
+          @if (title?.errors?.['required']) {
+            <span>Título é obrigatório</span>
+          }
+          @if (title?.errors?.['minlength']) {
+            <span>Título deve ter no mínimo 3 caracteres</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Descrição -->
+    <div class="mb-3">
+      <label for="description" class="form-label">Descrição <span class="text-danger">*</span></label>
+      <textarea
+        class="form-control"
+        id="description"
+        rows="4"
+        formControlName="description"
+        [class.is-invalid]="description?.invalid && description?.touched"
+        placeholder="Descreva detalhadamente sua solicitação"></textarea>
+      @if (description?.invalid && description?.touched) {
+        <div class="invalid-feedback">
+          @if (description?.errors?.['required']) {
+            <span>Descrição é obrigatória</span>
+          }
+          @if (description?.errors?.['minlength']) {
+            <span>Descrição deve ter no mínimo 10 caracteres</span>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Categoria e Prioridade -->
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="category" class="form-label">Categoria <span class="text-danger">*</span></label>
+        <select
+          class="form-select"
+          id="category"
+          formControlName="category"
+          [class.is-invalid]="category?.invalid && category?.touched"
+          >
+          <option value="">Selecione...</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
+        </select>
+        @if (category?.invalid && category?.touched) {
+          <div class="invalid-feedback">
+            Categoria é obrigatória
+          </div>
+        }
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="priority" class="form-label">Prioridade <span class="text-danger">*</span></label>
+        <select
+          class="form-select"
+          id="priority"
+          formControlName="priority"
+          >
+          @for (p of priorities; track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Mensagem de erro -->
+    @if (error) {
+      <div class="alert alert-danger">
+        {{ error }}
+      </div>
+    }
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button class="btn btn-secondary" (click)="onCancel()">
+    Cancelar
+  </button>
+  <button
+    class="btn btn-primary"
+    (click)="onSubmit()">
+    @if (submitting) {
+      <span class="spinner-border spinner-border-sm me-2"></span>
+    }
+    Criar Solicitação
+  </button>
+</div>
