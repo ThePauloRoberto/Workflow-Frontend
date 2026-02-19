@@ -1,272 +1,365 @@
-<div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Solicitações</h2>
-    <div class="d-flex align-items-center gap-3">
-      <span>Olá, {{ userName }}</span>
-      <span class="badge bg-info">{{ userRole }}</span>
+<div class="app-layout">
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="bi bi-diagram-3 fs-3"></i>
+        @if (!sidebarCollapsed) {
+          <span class="logo-text">Workflow</span>
+        }
+      </div>
+      <button class="toggle-btn" (click)="toggleSidebar()">
+        <i
+          class="bi"
+          [ngClass]="sidebarCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"
+        ></i>
+      </button>
+    </div>
 
-      @if (isUser) {
-        <button class="btn btn-primary" (click)="openNewRequestModal()">
-          <i class="bi bi-plus-circle"></i> Nova Solicitação
-        </button>
+    <div class="user-info">
+      <div class="avatar">
+        <i class="bi bi-person-circle fs-2"></i>
+      </div>
+      @if (!sidebarCollapsed) {
+        <div class="user-details">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role">{{ userRole }}</span>
+        </div>
       }
-
-      <button class="btn btn-outline-danger btn-sm" (click)="logout()">
-        <i class="bi bi-box-arrow-right"></i> Sair
-      </button>
     </div>
-  </div>
 
-  <div class="card mb-4">
-    <div
-      class="card-header bg-white d-flex justify-content-between align-items-center"
-    >
-      <h6 class="mb-0">Filtros</h6>
-      <button class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
-        <i class="bi bi-eraser"></i> Limpar
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Status</label>
-          <select class="form-select" [formControl]="statusFilter">
-            <option value="">Todos</option>
-            <option value="PENDING">Pendente</option>
-            <option value="APPROVED">Aprovado</option>
-            <option value="REJECTED">Rejeitado</option>
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Categoria</label>
-          <select class="form-select" [formControl]="categoryFilter">
-            <option value="">Todas</option>
-            @for (cat of categories; track cat) {
-              <option [value]="cat">{{ cat }}</option>
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item active">
+          <a class="nav-link">
+            <i class="bi bi-house-door"></i>
+            @if (!sidebarCollapsed) {
+              <span>Dashboard</span>
             }
-          </select>
-        </div>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/requests" routerLinkActive="active">
+            <i class="bi bi-list-check"></i>
+            @if (!sidebarCollapsed) {
+              <span>Solicitações</span>
+              <span class="badge">{{ totalItems }}</span>
+            }
+          </a>
+        </li>
+        @if (isUser) {
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              (click)="openNewRequestModal()"
+              style="cursor: pointer"
+            >
+              <i class="bi bi-plus-circle"></i>
+              @if (!sidebarCollapsed) {
+                <span>Nova Solicitação</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
 
-        <div class="col-md-2">
-          <label class="form-label">Prioridade</label>
-          <select class="form-select" [formControl]="priorityFilter">
-            <option value="">Todas</option>
-            <option value="Low">Baixa</option>
-            <option value="Medium">Média</option>
-            <option value="High">Alta</option>
-          </select>
-        </div>
+      <ul class="nav-list bottom">
+        <li class="nav-item">
+          <a
+            class="nav-link text-light"
+            (click)="logout()"
+            style="cursor: pointer"
+          >
+            <i class="bi bi-box-arrow-right"></i>
+            @if (!sidebarCollapsed) {
+              <span>Sair</span>
+            }
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 
-        <div class="col-md-2">
-          <label class="form-label">Buscar</label>
-          <input
-            type="text"
-            class="form-control"
-            [formControl]="searchFilter"
-            placeholder="Título ou descrição"
-          />
-        </div>
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main-content">
+    <div class="content-header">
+      <h2>Solicitações</h2>
+      <div class="header-actions">
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          (click)="clearFilters()"
+        >
+          <i class="bi bi-eraser"></i> Limpar Filtros
+        </button>
+      </div>
+    </div>
 
-        @if (isManager) {
+    <!-- Filtros -->
+    <div class="card mb-4">
+      <div class="card-header bg-white">
+        <h6 class="mb-0">Filtros</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- Status -->
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" [formControl]="statusFilter">
+              <option value="">Todos</option>
+              <option value="PENDING">Pendente</option>
+              <option value="APPROVED">Aprovado</option>
+              <option value="REJECTED">Rejeitado</option>
+            </select>
+          </div>
+
+          <!-- Categoria -->
+          <div class="col-md-3">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" [formControl]="categoryFilter">
+              <option value="">Todas</option>
+              @for (cat of categories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Prioridade -->
           <div class="col-md-2">
-            <label class="form-label">ID do Criador</label>
+            <label class="form-label">Prioridade</label>
+            <select class="form-select" [formControl]="priorityFilter">
+              <option value="">Todas</option>
+              <option value="Low">Baixa</option>
+              <option value="Medium">Média</option>
+              <option value="High">Alta</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Buscar</label>
             <input
               type="text"
               class="form-control"
-              [formControl]="createdByFilter"
-              placeholder="GUID do usuário"
+              [formControl]="searchFilter"
+              placeholder="Título ou descrição"
             />
+          </div>
+
+          @if (isManager) {
+            <div class="col-md-2">
+              <label class="form-label">ID do Criador</label>
+              <input
+                type="text"
+                class="form-control"
+                [formControl]="createdByFilter"
+                placeholder="GUID do usuário"
+              />
+            </div>
+          }
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 fw-semibold">Ordenar por:</label>
+            <select
+              class="form-select form-select-sm"
+              style="width: 160px"
+              [(ngModel)]="orderBy"
+              (change)="loadRequests()"
+            >
+              <option value="created_at">Data de criação</option>
+              <option value="title">Título</option>
+              <option value="priority">Prioridade</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 fw-semibold">Direção:</label>
+            <div class="btn-group" role="group">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="orderDirection === 'asc'"
+                [class.btn-outline-secondary]="orderDirection !== 'asc'"
+                (click)="setOrderDirection('asc')"
+              >
+                <i class="bi bi-sort-up"></i> Crescente
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="orderDirection === 'desc'"
+                [class.btn-outline-secondary]="orderDirection !== 'desc'"
+                (click)="setOrderDirection('desc')"
+              >
+                <i class="bi bi-sort-down"></i> Decrescente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+    }
+
+    @if (!loading) {
+      <div class="row">
+        @for (request of displayedRequests; track request.id) {
+          <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+              <div
+                class="card-body"
+                (click)="openRequestDetails(request)"
+                style="cursor: pointer"
+              >
+                <div
+                  class="d-flex justify-content-between align-items-start mb-2"
+                >
+                  <h5 class="card-title mb-0">{{ request.title }}</h5>
+                  <span
+                    class="badge"
+                    [ngClass]="getStatusClass(request.status)"
+                  >
+                    {{ getStatusLabel(request.status) }}
+                  </span>
+                </div>
+
+                <div class="mb-3">
+                  <span class="badge bg-secondary me-2">{{
+                    request.category
+                  }}</span>
+                  <span
+                    class="badge"
+                    [ngClass]="getPriorityClass(request.priority)"
+                  >
+                    {{ getPriorityLabel(request.priority) }}
+                  </span>
+                </div>
+
+                <p class="card-text text-muted small">
+                  <strong>Criado por:</strong> {{ request.create_by }} -
+                  {{ request.userName }}<br />
+                  <strong>Data:</strong> {{ formatDate(request.created_at) }}
+                </p>
+              </div>
+
+              @if (isManager && request.status === "PENDING") {
+                <div
+                  class="card-footer bg-white border-top-0 d-flex justify-content-end gap-2"
+                >
+                  <button
+                    class="btn btn-sm btn-success"
+                    (click)="
+                      $event.stopPropagation(); openApproveDialog(request)
+                    "
+                  >
+                    <i class="bi bi-check-circle"></i> Aprovar
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    (click)="
+                      $event.stopPropagation(); openRejectDialog(request)
+                    "
+                  >
+                    <i class="bi bi-x-circle"></i> Rejeitar
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="col-12 text-center py-5">
+            <p class="text-muted">Nenhuma solicitação encontrada</p>
           </div>
         }
       </div>
+    }
 
-<div class="d-flex flex-wrap gap-3 align-items-center mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <label class="form-label mb-0 fw-semibold">Ordenar por:</label>
-    <select class="form-select form-select-sm" style="width: 160px;"
-            [(ngModel)]="orderBy" (change)="loadRequests()">
-      <option value="created_at" selected>Data de criação</option>
-      <option value="title">Título</option>
-      <option value="priority">Prioridade</option>
-      <option value="status">Status</option>
-    </select>
-  </div>
+    @if (!loading && totalItems > 0) {
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-muted small">
+            Mostrando {{ (currentPage - 1) * pageSize + 1 }} -
+            {{
+              currentPage * pageSize > totalItems
+                ? totalItems
+                : currentPage * pageSize
+            }}
+            de {{ totalItems }}
+          </span>
 
-  <div class="d-flex align-items-center gap-2">
-    <label class="form-label mb-0 fw-semibold">Direção:</label>
-    <div class="btn-group" role="group">
-      <button type="button"
-              class="btn btn-sm"
-              [class.btn-primary]="orderDirection === 'asc'"
-              [class.btn-outline-secondary]="orderDirection !== 'asc'"
-              (click)="setOrderDirection('asc')">
-        <i class="bi bi-sort-up"></i> Crescente
-      </button>
-      <button type="button"
-              class="btn btn-sm"
-              [class.btn-primary]="orderDirection === 'desc'"
-              [class.btn-outline-secondary]="orderDirection !== 'desc'"
-              (click)="setOrderDirection('desc')">
-        <i class="bi bi-sort-down"></i> Decrescente
-      </button>
-    </div>
-  </div>
-</div>
-  @if (loading) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Carregando...</span>
-      </div>
-    </div>
-  }
-
-  <!-- Lista de Cards -->
-  @if (!loading) {
-    <div class="row">
-      @for (request of displayedRequests; track request.id) {
-        <div class="col-md-6 col-lg-4 mb-4">
-          <div class="card h-100 shadow-sm">
-            <div
-              class="card-body"
-              (click)="openRequestDetails(request)"
-              style="cursor: pointer"
-            >
-              <div
-                class="d-flex justify-content-between align-items-start mb-2"
-              >
-                <h5 class="card-title mb-0">{{ request.title }}</h5>
-                <span class="badge" [ngClass]="getStatusClass(request.status)">
-                  {{ getStatusLabel(request.status) }}
-                </span>
-              </div>
-
-              <div class="mb-3">
-                <span class="badge bg-secondary me-2">{{
-                  request.category
-                }}</span>
-                <span
-                  class="badge"
-                  [ngClass]="getPriorityClass(request.priority)"
-                >
-                  {{ getPriorityLabel(request.priority) }}
-                </span>
-              </div>
-
-              <p class="card-text text-muted small">
-                <strong>Criado por:</strong> {{ request.create_By_Name ||request.create_by }}<br />
-                <strong>Data:</strong> {{ formatDate(request.created_at) }}
-              </p>
-            </div>
-
-            @if (isManager && request.status === "PENDING") {
-              <div
-                class="card-footer bg-white border-top-0 d-flex justify-content-end gap-2"
-              >
-                <button
-                  class="btn btn-sm btn-success"
-                  (click)="$event.stopPropagation(); openApproveDialog(request)"
-                >
-                  <i class="bi bi-check-circle"></i> Aprovar
-                </button>
-                <button
-                  class="btn btn-sm btn-danger"
-                  (click)="$event.stopPropagation(); openRejectDialog(request)"
-                >
-                  <i class="bi bi-x-circle"></i> Rejeitar
-                </button>
-              </div>
+          <select
+            class="form-select form-select-sm"
+            style="width: 80px"
+            (change)="changePageSize($any($event.target).value)"
+          >
+            @for (size of pageSizeOptions; track size) {
+              <option [value]="size" [selected]="size === pageSize">
+                {{ size }}
+              </option>
             }
-          </div>
+          </select>
         </div>
-      } @empty {
-        <div class="col-12 text-center py-5">
-          <p class="text-muted">Nenhuma solicitação encontrada</p>
-        </div>
-      }
-    </div>
-  }
 
-  <!-- Paginação -->
-  @if (!loading && displayedRequests.length > 0) {
-    <div class="d-flex justify-content-between align-items-center mt-4">
-      <div class="d-flex align-items-center gap-2">
-        <span class="text-muted small">
-          Mostrando {{ (currentPage - 1) * pageSize + 1 }} -
-          {{
-            currentPage * pageSize > totalItems
-              ? totalItems
-              : currentPage * pageSize
-          }}
-          de {{ totalItems }}
-        </span>
-
-        <select
-          class="form-select form-select-sm"
-          style="width: 80px"
-          (change)="changePageSize($any($event.target).value)"
-        >
-          @for (size of pageSizeOptions; track size) {
-            <option [value]="size" [selected]="size === pageSize">
-              {{ size }}
-            </option>
-          }
-        </select>
-      </div>
-
-      <nav>
-        <ul class="pagination mb-0">
-          <li class="page-item" [class.disabled]="currentPage === 1">
-            <a
-              class="page-link"
-              (click)="changePage(1)"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-chevron-double-left"></i>
-            </a>
-          </li>
-          <li class="page-item" [class.disabled]="currentPage === 1">
-            <a
-              class="page-link"
-              (click)="changePage(currentPage - 1)"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-chevron-left"></i>
-            </a>
-          </li>
-
-          @for (page of getPages(); track page) {
-            <li class="page-item" [class.active]="page === currentPage">
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
               <a
                 class="page-link"
-                (click)="changePage(page)"
+                (click)="changePage(1)"
                 style="cursor: pointer"
               >
-                {{ page }}
+                <i class="bi bi-chevron-double-left"></i>
               </a>
             </li>
-          }
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a
+                class="page-link"
+                (click)="changePage(currentPage - 1)"
+                style="cursor: pointer"
+              >
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
 
-          <li class="page-item" [class.disabled]="currentPage === totalPages">
-            <a
-              class="page-link"
-              (click)="changePage(currentPage + 1)"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-chevron-right"></i>
-            </a>
-          </li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages">
-            <a
-              class="page-link"
-              (click)="changePage(totalPages)"
-              style="cursor: pointer"
-            >
-              <i class="bi bi-chevron-double-right"></i>
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  }
+            @for (page of getPages(); track page) {
+              <li class="page-item" [class.active]="page === currentPage">
+                <a
+                  class="page-link"
+                  (click)="changePage(page)"
+                  style="cursor: pointer"
+                >
+                  {{ page }}
+                </a>
+              </li>
+            }
+
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a
+                class="page-link"
+                (click)="changePage(currentPage + 1)"
+                style="cursor: pointer"
+              >
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a
+                class="page-link"
+                (click)="changePage(totalPages)"
+                style="cursor: pointer"
+              >
+                <i class="bi bi-chevron-double-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    }
+  </main>
 </div>

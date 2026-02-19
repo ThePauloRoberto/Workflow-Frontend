@@ -2,13 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { combineLatest, debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import {
   RequestFilter,
   RequestService,
 } from '../../core/services/request.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Status } from '../../core/models/utils/Status.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
 import { NewRequestComponent } from '../new-request/new-request.component';
@@ -403,4 +402,10 @@ export class RequestsComponent implements OnInit {
       this.loadRequests();
     }
   }
+
+  sidebarCollapsed = false;
+
+toggleSidebar(): void {
+  this.sidebarCollapsed = !this.sidebarCollapsed;
+}
 }
