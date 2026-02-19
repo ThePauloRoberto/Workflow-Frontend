@@ -85,11 +85,9 @@ export class RequestDetailComponent implements OnInit {
   loadHistory(id: string): void {
     this.requestService.getRequestHistory(id).subscribe({
       next: (data) => {
-        console.log('Histórico processado (array):', data);
         this.history = data;
       },
       error: (err) => {
-        console.error('Erro ao carregar histórico', err);
         this.history = [];
       },
     });
@@ -112,7 +110,6 @@ export class RequestDetailComponent implements OnInit {
           this.loadHistory(this.request.id);
         },
         error: (err) => {
-          console.error('Erro ao aprovar', err);
           this.error = 'Erro ao aprovar solicitação';
         },
       });
@@ -139,7 +136,6 @@ export class RequestDetailComponent implements OnInit {
       this.loadHistory(this.request.id);
     },
     error: (err) => {
-      console.error('Erro ao rejeitar', err);
       this.error = 'Erro ao rejeitar solicitação';
     }
   });

@@ -79,7 +79,6 @@ export class RequestsComponent implements OnInit {
     this.loadCategories();
   }
 
-  // Atualiza os filtros
   setupFilters(): void {
     this.statusFilter.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
@@ -113,7 +112,6 @@ export class RequestsComponent implements OnInit {
       this.createdByFilter.valueChanges
         .pipe(debounceTime(500), distinctUntilChanged())
         .subscribe((value) => {
-          console.log('Filtro createdBy alterado:', value);
           this.currentPage = 1;
           this.applyFilters();
         });
@@ -145,22 +143,16 @@ export class RequestsComponent implements OnInit {
     this.requestService.getRequests(filter).subscribe({
       next: (response) => {
         response.items.forEach((req: any, index: number) => {
-          console.log(
-            `   ${index + 1}. ID: ${req.id}, Criado por: ${req.create_by}, Título: ${req.title}`,
-          );
         });
 
         this.allRequests = response.items;
 
-        // FILTRO PARA USER
         if (this.isUser) {
-
           const antes = this.allRequests.length;
           this.allRequests = this.allRequests.filter((req) => {
             const pertence = req.create_by === this.currentUserId;
             return pertence;
           });
-
         } else {
         }
 
@@ -293,16 +285,102 @@ export class RequestsComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  changePage(page: number): void {
-    if (page < 1 || page > this.totalPages) return;
-    this.currentPage = page;
+  toggleOrderDirection(): void {
+    this.orderDirection = this.orderDirection === 'ASC' ? 'DESC' : 'ASC';
     this.loadRequests();
   }
 
-  changePageSize(size: number): void {
-    this.pageSize = size;
+  applyFilters(): void {
+    let filtered = [...this.allRequests];
+
+    if (this.statusFilter.value) {
+      filtered = filtered.filter(
+        (req) => req.status === this.statusFilter.value,
+      );
+    }
+
+    if (this.categoryFilter.value) {
+      filtered = filtered.filter(
+        (req) => req.category === this.categoryFilter.value,
+      );
+    }
+    if (this.priorityFilter.value) {
+      filtered = filtered.filter(
+        (req) => req.priority === this.priorityFilter.value,
+      );
+    }
+
+    if (this.searchFilter.value) {
+      const searchTerm = this.searchFilter.value.toLowerCase();
+      filtered = filtered.filter(
+        (req) =>
+          req.title.toLowerCase().includes(searchTerm) ||
+          req.description.toLowerCase().includes(searchTerm),
+      );
+    }
+
+    if (this.createdByFilter.value && this.isManager) {
+      const searchId = this.createdByFilter.value.trim().toLowerCase();
+      filtered = filtered.filter((req) => {
+        if (!req.create_by) return false;
+        const matches = req.create_by.toLowerCase().includes(searchId);
+        return matches;
+      });
+    }
+    filtered = this.sortRequests(filtered);
+
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.displayedRequests = filtered.slice(start, end);
+
+    this.totalItems = filtered.length;
+    this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  sortRequests(requests: any[]): any[] {
+    const orderBy = this.orderBy;
+    const direction = this.orderDirection === 'asc' ? 1 : -1;
+
+    return [...requests].sort((a, b) => {
+      let valA = a[orderBy];
+      let valB = b[orderBy];
+
+      if (orderBy === 'created_at') {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      }
+
+      if (valA < valB) return -1 * direction;
+      if (valA > valB) return 1 * direction;
+      return 0;
+    });
+  }
+
+  openNewRequestModal(): void {
+    const dialogRef = this.dialog.open(NewRequestComponent, {
+      width: '600px',
+      maxWidth: '95vw',
+      disableClose: true,
+      panelClass: 'new-request-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result === 'created') {
+        this.loadRequests();
+      }
+    });
+  }
+
+  changePage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    this.applyFilters();
+  }
+
+  changePageSize(size: string): void {
+    this.pageSize = Number(size);
     this.currentPage = 1;
-    this.loadRequests();
+    this.applyFilters();
   }
 
   getPages(): number[] {
@@ -321,92 +399,11 @@ export class RequestsComponent implements OnInit {
     return pages;
   }
 
-  toggleOrderDirection(): void {
-    this.orderDirection = this.orderDirection === 'ASC' ? 'DESC' : 'ASC';
-    this.loadRequests();
-  }
-
-  applyFilters(): void {
-
-  let filtered = [...this.allRequests];
-
-  // Filtro por Status
-  if (this.statusFilter.value) {
-    filtered = filtered.filter(req => req.status === this.statusFilter.value);
-  }
-
-  // Filtro por Categoria
-  if (this.categoryFilter.value) {
-    filtered = filtered.filter(req => req.category === this.categoryFilter.value);
-  }
-  // Filtro por Prioridade
-  if (this.priorityFilter.value) {
-    filtered = filtered.filter(req => req.priority === this.priorityFilter.value);
-  }
-
-  // Filtro por Busca
-  if (this.searchFilter.value) {
-    const searchTerm = this.searchFilter.value.toLowerCase();
-    filtered = filtered.filter(req =>
-      req.title.toLowerCase().includes(searchTerm) ||
-      req.description.toLowerCase().includes(searchTerm)
-    );
-  }
-
-  if (this.createdByFilter.value && this.isManager) {
-    const searchId = this.createdByFilter.value.trim().toLowerCase();
-    filtered = filtered.filter(req => {
-      if (!req.create_by) return false;
-      const matches = req.create_by.toLowerCase().includes(searchId);
-      console.log(`Request ${req.id}: create_by=${req.create_by} includes ${searchId}? ${matches}`);
-      return matches;
-    });
-  }
-  // Aplica ordenação
-  filtered = this.sortRequests(filtered);
-
-  // Aplica paginação
-  const start = (this.currentPage - 1) * this.pageSize;
-  const end = start + this.pageSize;
-  this.displayedRequests = filtered.slice(start, end);
-
-  this.totalItems = filtered.length;
-  this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-
-}
-
-  sortRequests(requests: any[]): any[] {
-    const orderBy = this.orderBy;
-    const direction = this.orderDirection === 'asc' ? 1 : -1;
-
-    return [...requests].sort((a, b) => {
-      let valA = a[orderBy];
-      let valB = b[orderBy];
-
-      // Trata datas
-      if (orderBy === 'created_at') {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
-      }
-
-      if (valA < valB) return -1 * direction;
-      if (valA > valB) return 1 * direction;
-      return 0;
-    });
-  }
-
-  openNewRequestModal(): void {
-    const dialogRef = this.dialog.open(NewRequestComponent, {
-      width: '600px',
-      maxWidth: '95vw',
-      disableClose: true, // Impede fechar clicando fora
-      panelClass: 'new-request-dialog',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result === 'created') {
-        this.loadRequests(); // Recarrega a lista se criou uma nova
-      }
-    });
+  setOrderDirection(direction: 'asc' | 'desc'): void {
+    if (this.orderDirection !== direction) {
+      this.orderDirection = direction;
+      this.currentPage = 1;
+      this.loadRequests();
+    }
   }
 }

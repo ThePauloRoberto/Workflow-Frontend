@@ -8,7 +8,6 @@
 
 <div class="modal-body">
   <form [formGroup]="requestForm" (ngSubmit)="onSubmit()">
-    <!-- Título -->
     <div class="mb-3">
       <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
       <input
@@ -30,7 +29,6 @@
       }
     </div>
 
-    <!-- Descrição -->
     <div class="mb-3">
       <label for="description" class="form-label">Descrição <span class="text-danger">*</span></label>
       <textarea
@@ -52,7 +50,6 @@
       }
     </div>
 
-    <!-- Categoria e Prioridade -->
     <div class="row">
       <div class="col-md-6 mb-3">
         <label for="category" class="form-label">Categoria <span class="text-danger">*</span></label>
@@ -88,7 +85,6 @@
       </div>
     </div>
 
-    <!-- Mensagem de erro -->
     @if (error) {
       <div class="alert alert-danger">
         {{ error }}

@@ -1,4 +1,3 @@
-/* Timeline */
 .timeline-item {
   position: relative;
   padding-left: 20px;
@@ -33,7 +32,6 @@
   font-weight: 500;
 }
 
-/* Modal overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -85,7 +83,6 @@
   border-top: 1px solid #dee2e6;
 }
 
-/* Badges */
 .badge {
   font-size: 0.9rem;
   padding: 0.5rem 0.8rem;
@@ -95,18 +92,15 @@
   font-size: 1rem !important;
 }
 
-/* Table */
 .table-borderless td {
   padding: 0.5rem 0;
   border: none;
 }
 
-/* Icons */
 .bi {
   vertical-align: middle;
 }
 
-/* Scroll do modal principal */
 :host {
   display: block;
   max-height: 90vh;

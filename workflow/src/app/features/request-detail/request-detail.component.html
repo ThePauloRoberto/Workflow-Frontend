@@ -1,5 +1,4 @@
 <div class="container-fluid p-4">
-  <!-- Loading -->
   @if (loading) {
     <div class="text-center py-5">
       <div class="spinner-border text-primary" role="status">
@@ -8,37 +7,30 @@
     </div>
   }
 
-  <!-- Erro -->
   @if (error && !loading) {
     <div class="alert alert-danger">{{ error }}</div>
   }
 
-  <!-- Conteúdo da Solicitação -->
   @if (request && !loading) {
-    <!-- Header com ações -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h3 class="mb-0">Detalhe da Solicitação</h3>
       <div class="d-flex gap-2">
         @if (canActOnRequest) {
-          <!-- Botão Aprovar -->
           <button class="btn btn-success" (click)="onApprove()">
             <i class="bi bi-check-circle"></i> Aprovar
           </button>
 
-          <!-- Botão Rejeitar -->
           <button class="btn btn-danger" (click)="onReject()">
             <i class="bi bi-x-circle"></i> Rejeitar
           </button>
         }
 
-        <!-- Botão para rejeitar solicitação APROVADA (Manager) -->
         <button class="btn btn-outline-secondary" (click)="closeDialog()">
           <i class="bi bi-x-lg"></i> Fechar
         </button>
       </div>
     </div>
 
-    <!-- Card Principal com todas as informações -->
     <div class="card shadow mb-4">
       <div
         class="card-header bg-white d-flex justify-content-between align-items-center"
@@ -53,11 +45,9 @@
       </div>
 
       <div class="card-body">
-        <!-- Título em destaque -->
         <h4 class="mb-4">{{ request.title }}</h4>
 
         <div class="row">
-          <!-- Coluna 1: Informações básicas -->
           <div class="col-md-6">
             <table class="table table-borderless">
               <tr>
@@ -97,14 +87,19 @@
             </table>
           </div>
 
-          <!-- Coluna 2: Datas e responsáveis -->
           <div class="col-md-6">
             <table class="table table-borderless">
               <tr>
                 <td class="fw-bold text-muted" style="width: 140px">
                   Criado por:
                 </td>
-                <td>{{ request.create_by || "N/A" }}</td>
+                <td>{{ request.create_By_Name || request.create_by || "N/A" }}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted" style="width: 140px">
+                  Id do usuário:
+                </td>
+                <td>{{ request.create_by }}</td>
               </tr>
               <tr>
                 <td class="fw-bold text-muted">Data criação:</td>
@@ -140,7 +135,6 @@
           </div>
         </div>
 
-        <!-- Motivo da rejeição (se houver) -->
         @if (request.rejectionReason) {
           <div class="mt-4">
             <h6 class="fw-bold text-danger mb-2">Motivo da rejeição:</h6>
@@ -153,7 +147,6 @@
       </div>
     </div>
 
-    <!-- Histórico / Timeline -->
     <div class="card shadow">
       <div class="card-header bg-white">
         <h5 class="mb-0">
@@ -194,12 +187,19 @@
                           >
                         </div>
 
-                        <p class="mb-1">
-                          <i class="bi bi-person-circle me-1"></i>
-                          <strong>{{
-                            item.changedBy || item.userId || "Sistema"
-                          }}</strong>
-                        </p>
+                        @if (item.create_By_Name) {
+                          <p class="mb-1">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <strong>{{ item.create_By_Name }}</strong>
+                          </p>
+                        } @else {
+                          <p class="mb-1">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <strong>{{
+                              item.userName || "Sistema"
+                            }}</strong>
+                          </p>
+                        }
 
                         @if (item.comment || item.description) {
                           <p class="mb-0 mt-2 p-2 bg-white rounded">
@@ -219,7 +219,6 @@
     </div>
   }
 
-  <!-- Diálogo de Aprovação -->
   @if (showApproveDialog) {
     <div class="modal-overlay">
       <div class="modal-dialog">
@@ -259,8 +258,6 @@
     </div>
   }
 
-  <!-- Diálogo de Rejeição -->
-  <!-- Diálogo de Rejeição -->
   @if (showRejectDialog) {
     <div class="modal-overlay">
       <div class="modal-dialog">

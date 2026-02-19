@@ -1,12 +1,10 @@
 <div class="container-fluid py-4">
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Solicitações</h2>
     <div class="d-flex align-items-center gap-3">
       <span>Olá, {{ userName }}</span>
       <span class="badge bg-info">{{ userRole }}</span>
 
-      <!-- Botão de criar solicitação (apenas para User) -->
       @if (isUser) {
         <button class="btn btn-primary" (click)="openNewRequestModal()">
           <i class="bi bi-plus-circle"></i> Nova Solicitação
@@ -19,7 +17,6 @@
     </div>
   </div>
 
-  <!-- Filtros -->
   <div class="card mb-4">
     <div
       class="card-header bg-white d-flex justify-content-between align-items-center"
@@ -31,7 +28,6 @@
     </div>
     <div class="card-body">
       <div class="row g-3">
-        <!-- Status -->
         <div class="col-md-3">
           <label class="form-label">Status</label>
           <select class="form-select" [formControl]="statusFilter">
@@ -42,7 +38,6 @@
           </select>
         </div>
 
-        <!-- Categoria (dinâmica) -->
         <div class="col-md-3">
           <label class="form-label">Categoria</label>
           <select class="form-select" [formControl]="categoryFilter">
@@ -53,7 +48,6 @@
           </select>
         </div>
 
-        <!-- Prioridade -->
         <div class="col-md-2">
           <label class="form-label">Prioridade</label>
           <select class="form-select" [formControl]="priorityFilter">
@@ -64,7 +58,6 @@
           </select>
         </div>
 
-        <!-- Busca por texto -->
         <div class="col-md-2">
           <label class="form-label">Buscar</label>
           <input
@@ -75,7 +68,6 @@
           />
         </div>
 
-        <!-- Busca por ID do criador (apenas Manager) -->
         @if (isManager) {
           <div class="col-md-2">
             <label class="form-label">ID do Criador</label>
@@ -89,34 +81,38 @@
         }
       </div>
 
-      <!-- No header, ao lado dos filtros -->
-      <div class="d-flex gap-2 mb-3">
-        <select
-          class="form-select form-select-sm"
-          style="width: auto"
-          [(ngModel)]="orderBy"
-          (change)="loadRequests()"
-        >
-          <option value="Created_at">Data de criação</option>
-          <option value="Title">Título</option>
-          <option value="Priority">Prioridade</option>
-          <option value="Status">Status</option>
-        </select>
+<div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+  <div class="d-flex align-items-center gap-2">
+    <label class="form-label mb-0 fw-semibold">Ordenar por:</label>
+    <select class="form-select form-select-sm" style="width: 160px;"
+            [(ngModel)]="orderBy" (change)="loadRequests()">
+      <option value="created_at" selected>Data de criação</option>
+      <option value="title">Título</option>
+      <option value="priority">Prioridade</option>
+      <option value="status">Status</option>
+    </select>
+  </div>
 
-        <button
-          class="btn btn-sm btn-outline-secondary"
-          (click)="toggleOrderDirection()"
-        >
-          <i
-            class="bi"
-            [ngClass]="orderDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
-          ></i>
-          {{ orderDirection === "asc" ? "Crescente" : "Decrescente" }}
-        </button>
-      </div>
+  <div class="d-flex align-items-center gap-2">
+    <label class="form-label mb-0 fw-semibold">Direção:</label>
+    <div class="btn-group" role="group">
+      <button type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="orderDirection === 'asc'"
+              [class.btn-outline-secondary]="orderDirection !== 'asc'"
+              (click)="setOrderDirection('asc')">
+        <i class="bi bi-sort-up"></i> Crescente
+      </button>
+      <button type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="orderDirection === 'desc'"
+              [class.btn-outline-secondary]="orderDirection !== 'desc'"
+              (click)="setOrderDirection('desc')">
+        <i class="bi bi-sort-down"></i> Decrescente
+      </button>
     </div>
   </div>
-  <!-- Loading -->
+</div>
   @if (loading) {
     <div class="text-center py-5">
       <div class="spinner-border text-primary" role="status">
@@ -131,7 +127,6 @@
       @for (request of displayedRequests; track request.id) {
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card h-100 shadow-sm">
-            <!-- Card clicável -->
             <div
               class="card-body"
               (click)="openRequestDetails(request)"
@@ -159,12 +154,11 @@
               </div>
 
               <p class="card-text text-muted small">
-                <strong>Criado por:</strong> {{ request.create_by }}<br />
+                <strong>Criado por:</strong> {{ request.create_By_Name ||request.create_by }}<br />
                 <strong>Data:</strong> {{ formatDate(request.created_at) }}
               </p>
             </div>
 
-            <!-- Botões para Manager (apenas se for PENDING) -->
             @if (isManager && request.status === "PENDING") {
               <div
                 class="card-footer bg-white border-top-0 d-flex justify-content-end gap-2"
@@ -194,22 +188,27 @@
   }
 
   <!-- Paginação -->
-  @if (!loading && requests.length > 0) {
+  @if (!loading && displayedRequests.length > 0) {
     <div class="d-flex justify-content-between align-items-center mt-4">
       <div class="d-flex align-items-center gap-2">
         <span class="text-muted small">
           Mostrando {{ (currentPage - 1) * pageSize + 1 }} -
-          {{ Math.min(currentPage * pageSize, totalItems) }} de {{ totalItems }}
+          {{
+            currentPage * pageSize > totalItems
+              ? totalItems
+              : currentPage * pageSize
+          }}
+          de {{ totalItems }}
         </span>
 
         <select
           class="form-select form-select-sm"
-          style="width: auto"
+          style="width: 80px"
           (change)="changePageSize($any($event.target).value)"
         >
           @for (size of pageSizeOptions; track size) {
             <option [value]="size" [selected]="size === pageSize">
-              {{ size }} por página
+              {{ size }}
             </option>
           }
         </select>
@@ -270,5 +269,4 @@
       </nav>
     </div>
   }
-
 </div>

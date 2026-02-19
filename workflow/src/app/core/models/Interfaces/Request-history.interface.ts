@@ -11,7 +11,6 @@ export interface RequestHistory {
   oldValue: string;
   newValue: string;
 
-  // Relacionamentos
   request?: Request;
   user?: User;
 }

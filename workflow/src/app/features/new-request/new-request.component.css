@@ -20,7 +20,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Scrollbar personalizada */
 .modal-body::-webkit-scrollbar {
   width: 8px;
 }

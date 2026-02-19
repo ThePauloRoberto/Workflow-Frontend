@@ -5,19 +5,14 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
+   const authService = inject(AuthService);
   const router = inject(Router);
-  const token = authService.getToken();
 
-  let request = req;
+  const modifiedReq = req.clone({
+    withCredentials: true
+  });
 
-  if (token) {
-    request = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
-    });
-  }
-
-  return next(request).pipe(
+  return next(modifiedReq).pipe(
     catchError(error => {
       if (error.status === 401) {
         authService.logout();

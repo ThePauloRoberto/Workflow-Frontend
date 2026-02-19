@@ -1,74 +1,108 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 import { LoginRequest } from '../models/Interfaces/LoginRequest.interface';
 import { LoginResponse } from '../models/Interfaces/Login-response.interface';
 import { User } from '../models/Interfaces/User.entity';
-import { Role } from '../models/utils/Role.enum';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private apiUrl = 'https://localhost:7151/api';
-  private tokenKey = 'auth_token';
   private userKey = 'user_data';
 
-  constructor(private http: HttpClient) {}
+  private _isAuthenticated = false;
+  private _user: User | null = null;
+
+  constructor(private http: HttpClient) {
+    this.loadUserFromStorage();
+  }
+
+  private loadUserFromStorage(): void {
+    const userStr = localStorage.getItem(this.userKey);
+    if (userStr) {
+      try {
+        this._user = JSON.parse(userStr);
+        this._isAuthenticated = true;
+      } catch (e) {
+        this.clearAuth();
+      }
+    }
+  }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
-      .pipe(
-        tap((response) => {
-          localStorage.setItem(this.tokenKey, response.token);
-          localStorage.setItem(this.userKey, JSON.stringify(response.user));
-        }),
-      );
+    return this.http.post<LoginResponse>(
+      `${this.apiUrl}/auth/login`,
+      credentials,
+      { withCredentials: true }
+    ).pipe(
+      tap(response => {
+        this._user = response.user;
+        this._isAuthenticated = true;
+        localStorage.setItem(this.userKey, JSON.stringify(response.user));
+      })
+    );
   }
 
   logout(): void {
-    localStorage.removeItem(this.tokenKey);
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .subscribe({
+        complete: () => {
+          this.clearAuth();
+          window.location.href = '/login';
+        },
+        error: () => {
+          this.clearAuth();
+          window.location.href = '/login';
+        }
+      });
+  }
+
+  private clearAuth(): void {
+    this._user = null;
+    this._isAuthenticated = false;
     localStorage.removeItem(this.userKey);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+  checkAuthStatus(): Observable<boolean> {
+    return this.http.get<{ user: User }>(`${this.apiUrl}/auth/me`, { withCredentials: true })
+      .pipe(
+        map(response => {
+          this._user = response.user;
+          this._isAuthenticated = true;
+          localStorage.setItem(this.userKey, JSON.stringify(response.user));
+          return true;
+        }),
+        catchError(error => {
+          this.clearAuth();
+          return of(false);
+        })
+      );
   }
 
-getUser(): User | null {
-  const userStr = localStorage.getItem(this.userKey);
-  if (!userStr) return null;
-
-  try {
-    const user = JSON.parse(userStr);
-    return user;
-  } catch (e) {
-    return null;
+  getUser(): User | null {
+    return this._user || this.getUserFromStorage();
   }
-}
+
+  private getUserFromStorage(): User | null {
+    const userStr = localStorage.getItem(this.userKey);
+    return userStr ? JSON.parse(userStr) : null;
+  }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    return this._isAuthenticated || !!this.getUserFromStorage();
   }
 
   isManager(): boolean {
-    const user = this.getUser();
-    return user?.roles?.includes('Manager') || false;
+    return this.getUser()?.roles?.includes('Manager') || false;
   }
 
   isUser(): boolean {
-    const user = this.getUser();
-    return user?.roles?.includes('User') || false;
+    return this.getUser()?.roles?.includes('User') || false;
   }
 
   getUserId(): string | null {
-    const user = this.getUser();
-    return user?.id || null;
-  }
-
-  getUserRole(): string {
-    const user = this.getUser();
-    return user?.roles?.[0] || '';
+    return this.getUser()?.id || null;
   }
 }
