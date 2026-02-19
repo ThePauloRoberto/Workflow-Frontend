@@ -1,3 +1,97 @@
-.container {
-  max-width: 500px;
+:host {
+  display: block;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.container-fluid {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  height: 100vh !important;
+  margin: 0;
+  padding: 0;
+}
+
+.row > [class*="col-"] {
+  height: 100vh !important;
+  padding: 0;
+  margin: 0;
+}
+
+.bg-primary {
+  height: 100vh !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.bg-light {
+  height: 100vh !important;
+  background-color: #f8f9fa !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.bg-primary .d-flex.flex-column {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem !important;
+}
+
+.card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.input-group-text {
+  background-color: white;
+  border-right: none;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #dee2e6;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+}
+
+@media (max-width: 992px) {
+  :host {
+    overflow-y: auto;
+  }
+
+  .bg-light {
+    min-height: 100vh;
+    height: auto !important;
+  }
 }

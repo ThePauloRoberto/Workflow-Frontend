@@ -1,48 +1,112 @@
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-12">
-      <div class="card shadow">
-        <div class="card-body p-4">
-          <h3 class="text-center mb-4">Workflow</h3>
+<div class="container-fluid min-vh-100 p-0">
+  <div class="row g-0 h-100">
+
+    <div class="col-lg-6 d-none d-lg-flex bg-primary">
+      <div class="h-100 w-100 d-flex flex-column align-items-center justify-content-center text-white p-5">
+        <h1 class="display-4 fw-bold mb-4">Workflow</h1>
+
+        <h3 class="mb-5 text-center">Sistema de Gerenciamento de Solicitações</h3>
+
+        <div class="mt-4 w-75">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <span class="fs-5">Automação de processos</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <span class="fs-5">Fluxo de aprovação</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+            <span class="fs-5">Histórico completo</span>
+          </div>
+        </div>
+
+        <p class="mt-5 text-center text-white-50">
+          © 2026 Workflow. Todos os direitos reservados.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light">
+      <div class="card border-0 bg-transparent" style="width: 100%; max-width: 400px;">
+        <div class="card-body p-4 p-lg-5">
+          <div class="text-center d-lg-none mb-4">
+            <h2 class="text-primary">Workflow</h2>
+          </div>
+
+          <h3 class="text-center mb-2">Bem-vindo de volta!</h3>
+          <p class="text-center text-muted mb-4">Faça login para acessar o sistema</p>
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
-              <input
-                type="email"
-                class="form-control"
-                id="email"
-                formControlName="email"
-                [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-              <div class="invalid-feedback">
-                Email válido é obrigatório
+              <div class="input-group">
+                <input
+                  type="email"
+                  class="form-control border-start-2 ps-3"
+                  id="email"
+                  formControlName="email"
+                  [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+                  placeholder="seu@email.com">
               </div>
+              @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+                <div class="invalid-feedback d-block">
+                  @if (loginForm.get('email')?.errors?.['required']) {
+                    <span>Email é obrigatório</span>
+                  }
+                  @if (loginForm.get('email')?.errors?.['email']) {
+                    <span>Email inválido</span>
+                  }
+                </div>
+              }
             </div>
 
-            <div class="mb-3">
+            <div class="mb-4">
               <label for="password" class="form-label">Senha</label>
-              <input
-                type="password"
-                class="form-control"
-                id="password"
-                formControlName="password"
-                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-              <div class="invalid-feedback">
-                Senha deve ter no mínimo 6 caracteres
+              <div class="input-group">
+                <input
+                  type="password"
+                  class="form-control border-start-2 ps-3"
+                  id="password"
+                  formControlName="password"
+                  [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                  placeholder="******">
               </div>
+              @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+                <div class="invalid-feedback d-block">
+                  @if (loginForm.get('password')?.errors?.['required']) {
+                    <span>Senha é obrigatória</span>
+                  }
+                  @if (loginForm.get('password')?.errors?.['minlength']) {
+                    <span>Senha deve ter no mínimo 6 caracteres</span>
+                  }
+                </div>
+              }
             </div>
 
-            <div *ngIf="error" class="alert alert-danger">
-              {{ error }}
-            </div>
+            @if (error) {
+              <div class="alert alert-danger py-2">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ error }}
+              </div>
+            }
 
             <button
               type="submit"
-              class="btn btn-primary w-100"
+              class="btn btn-primary w-100 py-2 mb-3"
               [disabled]="loading">
-              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              @if (loading) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
               Entrar
             </button>
+
+            <div class="text-center">
+              <a href="#" class="text-decoration-none text-muted small">
+                Esqueceu sua senha?
+              </a>
+            </div>
           </form>
         </div>
       </div>
