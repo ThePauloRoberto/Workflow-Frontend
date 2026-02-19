@@ -86,6 +86,7 @@ export class RequestDetailComponent implements OnInit {
     this.requestService.getRequestHistory(id).subscribe({
       next: (data) => {
         this.history = data;
+        console.log(data)
       },
       error: (err) => {
         this.history = [];

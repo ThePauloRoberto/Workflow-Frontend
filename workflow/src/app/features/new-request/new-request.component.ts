@@ -48,7 +48,7 @@ export class NewRequestComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
       category: ['', Validators.required],
-      priority: ['Medium', Validators.required],
+      priority: ['', Validators.required],
     });
   }
 
@@ -79,7 +79,7 @@ export class NewRequestComponent implements OnInit {
       title: formValue.title,
       description: formValue.description,
       category: formValue.category,
-      priority: priorityMap[formValue.priority] || 1,
+      priority: priorityMap[formValue.priority] || 0,
       status: 0,
       create_by: this.authService.getUserId(),
     };

@@ -142,9 +142,6 @@ export class RequestsComponent implements OnInit {
 
     this.requestService.getRequests(filter).subscribe({
       next: (response) => {
-        response.items.forEach((req: any, index: number) => {
-        });
-
         this.allRequests = response.items;
 
         if (this.isUser) {
@@ -232,13 +229,13 @@ export class RequestsComponent implements OnInit {
     const statusNum = status;
     switch (statusNum) {
       case 'PENDING':
-        return 'PENDING';
+        return 'PENDENTE';
       case 'APPROVED':
-        return 'APPROVED';
+        return 'APROVADO';
       case 'REJECTED':
-        return 'REJECTED';
+        return 'REJEITADO';
       default:
-        return 'PENDING';
+        return 'PENDENTE';
     }
   }
 
@@ -258,13 +255,13 @@ export class RequestsComponent implements OnInit {
     const priorityNum = priority;
     switch (priorityNum) {
       case 'Low':
-        return 'Low';
+        return 'Baixa';
       case 'Medium':
-        return 'Medium';
+        return 'Média';
       case 'High':
-        return 'High';
+        return 'Alta';
       default:
-        return 'Low';
+        return 'Baixa';
     }
   }
 
