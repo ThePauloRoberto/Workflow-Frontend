@@ -6,6 +6,9 @@ export interface RequestFilter {
   category?: string;
   priority?: Priority;
   search?: string;
+  createdBy?: string;
   page?: number;
   pageSize?: number;
+  orderBy?: string;
+  orderDirection?: string;
 }

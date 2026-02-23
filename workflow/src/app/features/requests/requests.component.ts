@@ -3,14 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import {
-  RequestFilter,
-  RequestService,
-} from '../../core/services/request.service';
+import { RequestService } from '../../core/services/request.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { RequestDetailComponent } from '../request-detail/request-detail.component';
 import { NewRequestComponent } from '../new-request/new-request.component';
+import { RequestFilter } from '../../core/models/utils/Request-filter';
+import { formatDate as _formatDate,
+  getStatusClass as _getStatusClass,
+  getStatusLabel as _getStatusLabel,
+  getPriorityClass as _getPriorityClass,
+  getPriorityLabel as _getPriorityLabel} from '../../core/models/utils/formatting'
 
 @Component({
   selector: 'app-requests',
@@ -45,6 +48,13 @@ export class RequestsComponent implements OnInit {
   orderBy = 'created_at';
   orderDirection = 'desc';
 
+  formatDate = _formatDate;
+  getStatusClass = _getStatusClass;
+  getStatusLabel = _getStatusLabel;
+  getPriorityClass = _getPriorityClass;
+  getPriorityLabel = _getPriorityLabel;
+
+
   allRequests: any[] = [];
   displayedRequests: any[] = [];
 
@@ -75,7 +85,6 @@ export class RequestsComponent implements OnInit {
 
     this.loadRequests();
     this.setupFilters();
-    this.loadCategories();
   }
 
   setupFilters(): void {
@@ -117,18 +126,6 @@ export class RequestsComponent implements OnInit {
     }
   }
 
-  loadCategories(): void {
-    this.requestService.getRequests({ pageSize: 100 }).subscribe({
-      next: (response) => {
-        const uniqueCategories = new Set<string>();
-        response.items.forEach((req: any) => {
-          if (req.category) uniqueCategories.add(req.category);
-        });
-        this.categories = Array.from(uniqueCategories).sort();
-      },
-    });
-  }
-
   loadRequests(): void {
     this.loading = true;
 
@@ -141,20 +138,12 @@ export class RequestsComponent implements OnInit {
 
     this.requestService.getRequests(filter).subscribe({
       next: (response) => {
-        this.allRequests = response.items;
-
-        if (this.isUser) {
-          const antes = this.allRequests.length;
-          this.allRequests = this.allRequests.filter((req) => {
-            const pertence = req.create_by === this.currentUserId;
-            return pertence;
-          });
-        } else {
-        }
+        this.allRequests = this.isUser
+          ? response.items.filter((req) => req.create_by === this.currentUserId)
+          : response.items;
 
         this.extractCategories(this.allRequests);
         this.applyFilters();
-
         this.loading = false;
       },
       error: (err) => {
@@ -210,70 +199,6 @@ export class RequestsComponent implements OnInit {
       data: { requestId: request.id },
       panelClass: 'request-detail-dialog',
     });
-  }
-
-  getStatusClass(status: any): string {
-    const statusNum = status;
-    switch (statusNum) {
-      case 'APPROVED':
-        return 'bg-success';
-      case 'REJECTED':
-        return 'bg-danger';
-      default:
-        return 'bg-warning text-dark';
-    }
-  }
-
-  getStatusLabel(status: any): string {
-    const statusNum = status;
-    switch (statusNum) {
-      case 'PENDING':
-        return 'PENDENTE';
-      case 'APPROVED':
-        return 'APROVADO';
-      case 'REJECTED':
-        return 'REJEITADO';
-      default:
-        return 'PENDENTE';
-    }
-  }
-
-  getPriorityClass(priority: any): string {
-    const priorityNum = priority;
-    switch (priorityNum) {
-      case 'High':
-        return 'bg-danger';
-      case 'Medium':
-        return 'bg-warning text-dark';
-      default:
-        return 'bg-info text-dark';
-    }
-  }
-
-  getPriorityLabel(priority: any): string {
-    const priorityNum = priority;
-    switch (priorityNum) {
-      case 'Low':
-        return 'Baixa';
-      case 'Medium':
-        return 'Média';
-      case 'High':
-        return 'Alta';
-      default:
-        return 'Baixa';
-    }
-  }
-
-  formatDate(date: any): string {
-    if (!date) return '';
-    return (
-      new Date(date).toLocaleDateString('pt-BR') +
-      ' ' +
-      new Date(date).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    );
   }
 
   logout(): void {
@@ -405,7 +330,7 @@ export class RequestsComponent implements OnInit {
 
   sidebarCollapsed = false;
 
-toggleSidebar(): void {
-  this.sidebarCollapsed = !this.sidebarCollapsed;
-}
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
 }

@@ -14,6 +14,12 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { RequestService } from '../../core/services/request.service';
 import { AuthService } from '../../core/services/auth.service';
+import { formatDate as _formatDate,
+  getStatusClass as _getStatusClass,
+  getStatusLabel as _getStatusLabel,
+  getPriorityClass as _getPriorityClass,
+  getPriorityLabel as _getPriorityLabel} from '../../core/models/utils/formatting'
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-request-detail',
@@ -41,6 +47,12 @@ export class RequestDetailComponent implements OnInit {
   canActOnRequest = false;
   currentUser: any = null;
 
+  formatDate = _formatDate;
+  getStatusClass = _getStatusClass;
+  getStatusLabel = _getStatusLabel;
+  getPriorityClass = _getPriorityClass;
+  getPriorityLabel = _getPriorityLabel;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { requestId: string },
     private dialogRef: MatDialogRef<RequestDetailComponent>,
@@ -58,41 +70,30 @@ export class RequestDetailComponent implements OnInit {
     this.isManager = this.currentUser?.roles?.includes('Manager') || false;
 
     if (this.data?.requestId) {
-      this.loadRequest(this.data.requestId);
-      this.loadHistory(this.data.requestId);
+      this.loadData(this.data.requestId)
     }
   }
 
-  loadRequest(id: string): void {
-    this.loading = true;
-    this.requestService.getRequestById(id).subscribe({
-      next: (data) => {
-        this.request = data;
-        this.canActOnRequest =
-          this.isManager && this.request?.status === 'PENDING';
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error =
-          err.status === 404
-            ? 'Solicitação não encontrada'
-            : 'Erro ao carregar solicitação';
-        this.loading = false;
-      },
-    });
-  }
 
-  loadHistory(id: string): void {
-    this.requestService.getRequestHistory(id).subscribe({
-      next: (data) => {
-        this.history = data;
-        console.log(data)
-      },
-      error: (err) => {
-        this.history = [];
-      },
-    });
-  }
+  loadData(id: string): void {
+  this.loading = true;
+
+  forkJoin({
+    request: this.requestService.getRequestById(id),
+    history: this.requestService.getRequestHistory(id)
+  }).subscribe({
+    next: ({ request, history }) => {
+      this.request = request;
+      this.history = history;
+      this.canActOnRequest = this.isManager && request?.status === 'PENDING';
+      this.loading = false;
+    },
+    error: () => {
+      this.error = 'Erro ao carregar dados';
+      this.loading = false;
+    }
+  });
+}
 
   onApprove(): void {
     if (!this.canActOnRequest) return;
@@ -107,8 +108,7 @@ export class RequestDetailComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.showApproveDialog = false;
-          this.loadRequest(this.request.id);
-          this.loadHistory(this.request.id);
+          this.loadData(this.request.id)
         },
         error: (err) => {
           this.error = 'Erro ao aprovar solicitação';
@@ -133,8 +133,7 @@ export class RequestDetailComponent implements OnInit {
     next: (response) => {
       this.showRejectDialog = false;
       this.rejectForm.reset();
-      this.loadRequest(this.request.id);
-      this.loadHistory(this.request.id);
+      this.loadData(this.request.id)
     },
     error: (err) => {
       this.error = 'Erro ao rejeitar solicitação';
@@ -144,73 +143,6 @@ export class RequestDetailComponent implements OnInit {
 
   closeDialog(): void {
     this.dialogRef.close();
-  }
-
-  getStatusLabel(status: string): string {
-    switch (status) {
-      case 'PENDING':
-        return 'Pendente';
-      case 'APPROVED':
-        return 'Aprovado';
-      case 'REJECTED':
-        return 'Rejeitado';
-      default:
-        return status || 'Desconhecido';
-    }
-  }
-
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'APPROVED':
-        return 'bg-success';
-      case 'REJECTED':
-        return 'bg-danger';
-      case 'PENDING':
-        return 'bg-warning text-dark';
-      default:
-        return 'bg-secondary';
-    }
-  }
-
-  getPriorityClass(priority: string): string {
-    switch (priority?.toUpperCase()) {
-      case 'HIGH':
-      case 'ALTA':
-        return 'bg-danger';
-      case 'MEDIUM':
-      case 'MEDIA':
-        return 'bg-warning text-dark';
-      case 'LOW':
-      case 'BAIXA':
-        return 'bg-info text-dark';
-      default:
-        return 'bg-secondary';
-    }
-  }
-
-  getPriorityLabel(priority: string): string {
-    switch (priority?.toUpperCase()) {
-      case 'HIGH':
-        return 'Alta';
-      case 'MEDIUM':
-        return 'Média';
-      case 'LOW':
-        return 'Baixa';
-      default:
-        return priority || 'Desconhecida';
-    }
-  }
-
-  formatDate(date: any): string {
-    if (!date) return '';
-    return (
-      new Date(date).toLocaleDateString('pt-BR') +
-      ' ' +
-      new Date(date).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    );
   }
 
   get reason() {

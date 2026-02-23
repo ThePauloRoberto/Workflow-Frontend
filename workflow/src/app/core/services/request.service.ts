@@ -1,26 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
-
-export interface RequestFilter {
-  status?: string; // "PENDING", "APPROVED", "REJECTED"
-  category?: string;
-  priority?: string; // "Low", "Medium", "High"
-  search?: string;
-  createdBy?: string;
-  page?: number;
-  pageSize?: number;
-  orderBy?: string; // "created_at", "title", etc
-  orderDirection?: string; // "asc" ou "desc"
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+import { RequestFilter } from '../models/utils/Request-filter';
+import { PaginatedResponse } from '../models/utils/PaginatedResponse';
 
 @Injectable({
   providedIn: 'root',
